@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube MP3 ダウンローダー</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-red-50 to-pink-50 min-h-screen p-6">
+    <div class="max-w-2xl mx-auto">
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+            <!-- ヘッダー -->
+            <div class="text-center mb-8">
+                <div class="inline-block p-3 bg-red-100 rounded-full mb-4">
+                    <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                </div>
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">
+                    YouTube MP3 ダウンローダー
+                </h1>
+                <p class="text-gray-600">
+                    動画URLを入力すると、タイトルを自動取得してMP3ファイルを作成します
+                </p>
+            </div>
+
+            <!-- メインフォーム -->
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        YouTube URL
+                    </label>
+                    <input
+                        type="text"
+                        id="urlInput"
+                        placeholder="https://www.youtube.com/watch?v=..."
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-red-500 transition"
+                    />
+                </div>
+
+                <button
+                    id="convertBtn"
+                    class="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 flex items-center justify-center gap-2"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                    MP3に変換
+                </button>
+
+                <!-- ステータス表示 -->
+                <div id="statusBox" class="hidden p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p id="statusText" class="text-blue-800 text-sm"></p>
+                </div>
+
+                <!-- タイトル表示 -->
+                <div id="titleBox" class="hidden p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <p class="text-sm font-medium text-green-800 mb-1">
+                        取得した動画タイトル:
+                    </p>
+                    <p id="titleText" class="text-green-900 font-semibold"></p>
+                </div>
+
+                <!-- ダウンロードボタン -->
+                <div id="downloadBox" class="hidden p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
+                    <div class="flex items-center gap-2 mb-3">
+                        <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        <p class="text-sm font-medium text-emerald-800">
+                            変換完了！
+                        </p>
+                    </div>
+                    <a
+                        id="downloadLink"
+                        href="#"
+                        download
+                        class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-4 rounded-lg transition"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                        <span id="downloadText">ダウンロード</span>
+                    </a>
+                </div>
+
+                <!-- エラー表示 -->
+                <div id="errorBox" class="hidden p-4 bg-red-50 border border-red-200 rounded-lg flex gap-3">
+                    <svg class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <p id="errorText" class="text-red-800 text-sm"></p>
+                </div>
+            </div>
+
+            <!-- 説明 -->
+            <div class="mt-8 p-4 bg-gray-50 rounded-lg">
+                <h3 class="font-semibold text-gray-800 mb-2">使い方</h3>
+                <ol class="text-sm text-gray-600 space-y-1 list-decimal list-inside">
+                    <li>YouTubeのURLを上の入力欄に貼り付けてください</li>
+                    <li>「MP3に変換」ボタンをクリックします</li>
+                    <li>変換が完了したら、ダウンロードボタンが表示されます</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:3001';
+        
+        const urlInput = document.getElementById('urlInput');
+        const convertBtn = document.getElementById('convertBtn');
+        const statusBox = document.getElementById('statusBox');
+        const statusText = document.getElementById('statusText');
+        const titleBox = document.getElementById('titleBox');
+        const titleText = document.getElementById('titleText');
+        const downloadBox = document.getElementById('downloadBox');
+        const downloadLink = document.getElementById('downloadLink');
+        const downloadText = document.getElementById('downloadText');
+        const errorBox = document.getElementById('errorBox');
+        const errorText = document.getElementById('errorText');
+
+        function hideAll() {
+            statusBox.classList.add('hidden');
+            titleBox.classList.add('hidden');
+            downloadBox.classList.add('hidden');
+            errorBox.classList.add('hidden');
+        }
+
+        function showStatus(message) {
+            hideAll();
+            statusText.textContent = message;
+            statusBox.classList.remove('hidden');
+        }
+
+        function showTitle(title) {
+            titleText.textContent = title;
+            titleBox.classList.remove('hidden');
+        }
+
+        function showDownload(url, filename) {
+            downloadLink.href = url;
+            downloadLink.download = filename;
+            downloadText.textContent = `${filename} をダウンロード`;
+            downloadBox.classList.remove('hidden');
+        }
+
+        function showError(message) {
+            hideAll();
+            errorText.textContent = message;
+            errorBox.classList.remove('hidden');
+        }
+
+        convertBtn.addEventListener('click', async () => {
+            const url = urlInput.value.trim();
+            
+            if (!url) {
+                showError('YouTubeのURLを入力してください');
+                return;
+            }
+
+            // YouTubeのURLチェック
+            const youtubePattern = /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/;
+            if (!youtubePattern.test(url)) {
+                showError('有効なYouTubeのURLを入力してください');
+                return;
+            }
+
+            // ボタンを無効化
+            convertBtn.disabled = true;
+            convertBtn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> 処理中...';
+
+            try {
+                // 動画情報を取得
+                showStatus('動画情報を取得中...');
+                
+                const infoResponse = await fetch(`${API_BASE_URL}/api/get-info`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url })
+                });
+                
+                if (!infoResponse.ok) {
+                    throw new Error('動画情報の取得に失敗しました');
+                }
+                
+                const info = await infoResponse.json();
+                showTitle(info.title);
+                
+                // MP3に変換
+                showStatus('MP3に変換中... (この処理には時間がかかる場合があります)');
+                
+                const convertResponse = await fetch(`${API_BASE_URL}/api/convert`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url })
+                });
+                
+                if (!convertResponse.ok) {
+                    throw new Error('MP3への変換に失敗しました');
+                }
+                
+                const result = await convertResponse.json();
+                
+                showStatus('変換完了！ダウンロードの準備ができました');
+                showDownload(`${API_BASE_URL}${result.downloadUrl}`, result.filename);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                showError(error.message || '処理中にエラーが発生しました。サーバーが起動しているか確認してください。');
+            } finally {
+                // ボタンを有効化
+                convertBtn.disabled = false;
+                convertBtn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> MP3に変換';
+            }
+        });
+
+        // Enterキーでも変換できるように
+        urlInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                convertBtn.click();
+            }
+        });
+    </script>
+</body>
+</html>

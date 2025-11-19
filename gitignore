@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Downloads
+downloads/
+*.mp3
+*.mp4
+*.m4a
+*.webm
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment
+.env
+.env.local

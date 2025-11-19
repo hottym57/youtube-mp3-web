@@ -1,0 +1,22 @@
+{
+  "name": "youtube-mp3-web",
+  "version": "1.0.0",
+  "description": "YouTube動画をMP3に変換するWebアプリ",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "youtube",
+    "mp3",
+    "converter",
+    "downloader"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2"
+  }
+}
